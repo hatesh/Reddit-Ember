@@ -9,15 +9,15 @@ export class TopGGApi {
 
     constructor(token: string, bot: DiscordBot) {
         this.connection = new DBL(token, bot);
-        this.connection.on("posted", this.handlePosted);
-        this.connection.on("error", this.handleError);
+        this.connection.on("posted", TopGGApi.handlePosted);
+        this.connection.on("error", TopGGApi.handleError);
     }
 
-    private handlePosted() {
+    private static handlePosted() {
         logger("server count posted");
     }
 
-    private handleError(err: any) {
+    private static handleError(err: any) {
         logger("error:", err);
     }
 }
