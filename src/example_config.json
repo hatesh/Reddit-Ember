@@ -1,0 +1,8 @@
+{
+  "discord_token": "yourdiscordbottoken",
+  "topgg_token": "yourtopggbottoken",
+  "debug": "=*,-follow-redirects",
+  "prefix": "r/"
+}
+
+

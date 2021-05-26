@@ -1,4 +1,4 @@
-require('dotenv').config()
+const config = require('../config.json')
 const discord = require('discord.js')
 const debug = require('debug')
 
@@ -10,7 +10,7 @@ bot.once('ready', () => {
 })
 
 logger('connecting to Discord...')
-bot.login(process.env.DISCORD_TOKEN)
+bot.login(config.discord_token)
 
 bot.on('message', message => {
   if (message.channel.type !== 'text') return

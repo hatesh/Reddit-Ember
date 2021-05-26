@@ -1,4 +1,4 @@
-import { config } from 'dotenv'
+import * as config from './config.json'
 import { MessageEmbed, TextChannel } from 'discord.js'
 import { debug } from 'debug'
 import { Ember, RedditUrlMessageHandlerProps } from './ember'
@@ -16,18 +16,16 @@ import { TopGGApi } from './topgg'
 import { getVideoOrDownload } from './video'
 import { createUnknownErrorEmbed, RedditBotError } from './error'
 
-config() // must load environment vars before anything else
-
 const logger = debug('rdb')
 
-const bot = new Ember(process.env.DISCORD_TOKEN!, process.env.PREFIX ?? 'r/')
-const topgg = process.env.TOPGG_TOKEN ? new TopGGApi(process.env.TOPGG_TOKEN, bot.getBot()) : null
+const ember = new Ember(config.discord_token!, config.prefix ?? 'r/')
+const topgg = config.topgg_token ? new TopGGApi(config.topgg_token, ember.getBot()) : null
 
 const DEFAULT_EMBED_COLOR = '#2f3136' // 55ff11
 const TRUNCATE_TITLE_LENGTH = 200 // Max is 256
 const TRUNCATE_DESCRIPTION_LENGTH = 1000
 
-bot.on('redditUrl', async (props: RedditUrlMessageHandlerProps) => {
+ember.on('redditUrl', async (props: RedditUrlMessageHandlerProps) => {
   logger('redditurl', props.submissionId)
   try {
     let submission = await fetchSubmission(props.submissionId)
@@ -96,11 +94,11 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
 
   if (attachment) {
     if (submission.is_video || isVideoUrl(attachment)) {
-      await bot.sendVideoAttachment(channel, attachment, asSpoiler)
+      await ember.sendVideoAttachment(channel, attachment, asSpoiler)
     } else if (isImageUrl(attachment)) {
-      await bot.sendImageAttachment(channel, attachment, asSpoiler)
+      await ember.sendImageAttachment(channel, attachment, asSpoiler)
     } else {
-      await bot.sendUrlAttachment(channel, attachment, asSpoiler)
+      await ember.sendUrlAttachment(channel, attachment, asSpoiler)
     }
   }
 }
