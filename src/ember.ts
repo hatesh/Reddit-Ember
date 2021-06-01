@@ -84,12 +84,24 @@ export class Ember extends EventEmitter {
 
   private changePostAllowed(message: Message, allowed: boolean) {
     this.guildSettingsManager.setPostMessageAllowed(<string>message.guild?.id.toString(), allowed)
-    message.channel.send(this.guildSettingsManager.postAllowedString(allowed))
+    if (message.guild!.me!.permissions.has('EMBED_LINKS')) {
+      message.channel.send(
+        this.createSuccessEmbed('Summary Post Updated', this.guildSettingsManager.postAllowedString(allowed))
+      )
+    } else {
+      message.channel.send(this.guildSettingsManager.postAllowedString(allowed))
+    }
   }
 
   private changeIncludeComments(message: Message, allowed: boolean) {
     this.guildSettingsManager.setCommentsAllowed(<string>message.guild?.id.toString(), allowed)
-    message.channel.send(this.guildSettingsManager.includeCommentsString(allowed))
+    if (message.guild!.me!.permissions.has('EMBED_LINKS')) {
+      message.channel.send(
+        this.createSuccessEmbed('Summary Comments Updated', this.guildSettingsManager.includeCommentsString(allowed))
+      )
+    } else {
+      message.channel.send(this.guildSettingsManager.includeCommentsString(allowed))
+    }
   }
 
   private changeSuppressAllowed(message: Message, allowed: boolean) {
@@ -98,7 +110,16 @@ export class Ember extends EventEmitter {
       this.sendPermissionsMessage(message)
     } else {
       this.guildSettingsManager.setSuppressAllowed(<string>message.guild?.id.toString(), allowed)
-      message.channel.send(this.guildSettingsManager.suppressAllowedString(allowed))
+      if (message.guild!.me!.permissions.has('EMBED_LINKS')) {
+        message.channel.send(
+          this.createSuccessEmbed(
+            'Auto Embed Removal Updated',
+            this.guildSettingsManager.suppressAllowedString(allowed)
+          )
+        )
+      } else {
+        message.channel.send(this.guildSettingsManager.suppressAllowedString(allowed))
+      }
     }
   }
 
