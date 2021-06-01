@@ -103,7 +103,11 @@ export class Ember extends EventEmitter {
   }
 
   private sendSettings(message: Message) {
-    message.channel.send(this.guildSettingsManager.generateSettingsFromGuildId(<string>message.guild?.id.toString()))
+    if (message.guild!.me!.permissions.has('EMBED_LINKS')) {
+      message.channel.send(this.guildSettingsManager.generateMessageEmbedFromGuildId(message.guild))
+    } else {
+      message.channel.send(this.guildSettingsManager.generateStringFromGuildId(<string>message.guild?.id.toString()))
+    }
   }
 
   private checkForPermissions(message: Message) {

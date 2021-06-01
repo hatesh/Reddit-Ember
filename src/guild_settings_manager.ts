@@ -1,4 +1,5 @@
 import JSONdb from 'simple-json-db'
+import { Guild, MessageEmbed } from 'discord.js'
 
 export interface GuildSettings {
   post_message: boolean
@@ -47,11 +48,11 @@ export class GuildSettingsManager {
     this.db.set(guild_id, settings)
   }
 
-  public generateSettingsFromGuildId(guild_id: string): string {
-    return this.generateSettingsFromSettings(this.getServerSettings(guild_id))
+  public generateStringFromGuildId(guild_id: string): string {
+    return this.generateStringFromSettings(this.getServerSettings(guild_id))
   }
 
-  public generateSettingsFromSettings(settings: GuildSettings): string {
+  public generateStringFromSettings(settings: GuildSettings): string {
     return (
       this.postAllowedString(settings.post_message) +
       '\n' +
@@ -62,12 +63,23 @@ export class GuildSettingsManager {
     )
   }
 
+  public generateMessageEmbedFromGuildId(guild: Guild): MessageEmbed {
+    return new MessageEmbed()
+      .setTitle(`${guild.name} Ember Settings`)
+      .setDescription(this.generateStringFromGuildId(guild.id))
+      .setColor('#2196F3')
+      .setTimestamp(new Date())
+      .setFooter('See `r/help` for more information.')
+  }
+
   public postAllowedString(allowed: boolean): string {
     return `Ember will ${allowed ? 'now' : 'no longer'} send post information replies.`
   }
+
   public includeCommentsString(allowed: boolean): string {
     return `Ember will ${allowed ? 'show' : 'not show'} comments in the post description.`
   }
+
   public suppressAllowedString(allowed: boolean): string {
     return `Ember will ${allowed ? 'clean' : 'leave'} the discord auto embeds in the users message.`
   }
