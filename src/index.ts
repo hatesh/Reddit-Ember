@@ -19,9 +19,9 @@ import { createUnknownErrorEmbed, RedditBotError } from './error'
 const logger = debug('rdb')
 
 const ember = new Ember(config.discord_token!, config.prefix ?? 'r/')
+// config.topgg_token ? new TopGGApi(config.topgg_token, ember.getBot()) : null
 
 // if (config.topgg_token && config.topgg_token !== null) new TopGGApi(config.topgg_token, ember.getBot())
-
 
 const DEFAULT_EMBED_COLOR = '#2f3136' // 55ff11
 const TRUNCATE_TITLE_LENGTH = 200 // Max is 256
@@ -50,7 +50,7 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
   let urlToAuthor = encodeURI('https://www.reddit.com/u/' + submission.author)
   let urlIsAttachment = urlToSubmission !== submission.url
   let footerText = `On r/${submission.subreddit}`
-  footerText += `/${query}`
+  if (query) footerText += `/${query}`
 
   let userIcon = await getRedditUserIcon(submission.author)
   let subredditInfo = await getSubredditInfo(submission.subreddit)
@@ -58,7 +58,7 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
   let details = await getSubmission(submission.id)
 
   let descriptionBuilder = ''
-  descriptionBuilder += numberToEmojiNumber(submission.score, true) + '\n'
+  descriptionBuilder += numberToEmojiNumber(submission.score, false) + '\n'
   descriptionBuilder += truncateString(submission.selftext, TRUNCATE_DESCRIPTION_LENGTH)
 
   let embed = new MessageEmbed()
