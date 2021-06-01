@@ -78,18 +78,8 @@ export class Ember extends EventEmitter {
     else if (raw === 'embed only') this.changePostAllowed(message, false)
     else if (raw.startsWith('clean')) this.changeSuppressAllowed(message, true)
     else if (raw.startsWith('keep')) this.changeSuppressAllowed(message, false)
-  }
-
-  private sendSettings(message: Message) {
-    message.channel.send(this.guildSettingsManager.generateSettingsFromGuildId(<string>message.guild?.id.toString()))
-  }
-
-  private changeSuppressAllowed(message: Message, allowed: boolean) {
-    this.guildSettingsManager.setSuppressAllowed(
-      <string>message.guild?.id.toString(),
-      allowed && message.guild!.me!.permissions.has('MANAGE_MESSAGES')
-    )
-    message.channel.send(this.guildSettingsManager.suppressAllowedString(allowed))
+    else if (raw.startsWith('show')) this.changeIncludeComments(message, true)
+    else if (raw.startsWith('hide')) this.changeIncludeComments(message, false)
   }
 
   private changePostAllowed(message: Message, allowed: boolean) {
@@ -97,12 +87,30 @@ export class Ember extends EventEmitter {
     message.channel.send(this.guildSettingsManager.postAllowedString(allowed))
   }
 
-  private checkForPermissions(message: Message) {
-    let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
-    if (raw.startsWith('perm')) this.createPermissionsMessage(message, true)
+  private changeIncludeComments(message: Message, allowed: boolean) {
+    this.guildSettingsManager.setCommentsAllowed(<string>message.guild?.id.toString(), allowed)
   }
 
-  private createPermissionsMessage(message: Message, reportCorrect: boolean = false) {
+  private changeSuppressAllowed(message: Message, allowed: boolean) {
+    if (!message.guild!.me!.permissions.has('MANAGE_MESSAGES')) {
+      message.channel.send('I need more permissions to do that!')
+      this.sendPermissionsMessage(message)
+    } else {
+      this.guildSettingsManager.setSuppressAllowed(<string>message.guild?.id.toString(), allowed)
+      message.channel.send(this.guildSettingsManager.suppressAllowedString(allowed))
+    }
+  }
+
+  private sendSettings(message: Message) {
+    message.channel.send(this.guildSettingsManager.generateSettingsFromGuildId(<string>message.guild?.id.toString()))
+  }
+
+  private checkForPermissions(message: Message) {
+    let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
+    if (raw.startsWith('perm')) this.sendPermissionsMessage(message, true)
+  }
+
+  private sendPermissionsMessage(message: Message, reportCorrect: boolean = false) {
     let permissions = message.guild!.me!.permissions
     if (
       !permissions.has('ATTACH_FILES') ||
@@ -146,7 +154,7 @@ export class Ember extends EventEmitter {
   }
 
   private checkForHelp(message: Message) {
-    this.createPermissionsMessage(message, false)
+    this.sendPermissionsMessage(message, false)
     let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
     if (!raw || raw === 'help' || raw === 'h' || raw === '?') message.channel.send(Ember.createHelpEmbed())
   }
@@ -168,11 +176,12 @@ export class Ember extends EventEmitter {
               Post Summary
                 If you would to have a post summary included, send \`r/post summary\`.
                 If you would rather just have the media content embedded, send \`r/embed only\`.
+                If you would like the summary to include comments, send \`r/show comments\`.
+                If you would like the summary to hide the comments, send \`r/hide comments\`.
               Discord Auto Embeds
                 If you would like to remove the Auto Discord Embed add to the original message, send \`r/clean message\`.
-                  ***Note:** This will the bot to have Manage Messages permissions, double check what the bot as been given*
                 If you would like to leave the Auto Discord Embed, send \`r/keep message\`.
-                ***Note:** Only one out of post summary and keep original embeds can be active at one time.*
+              
               
             
             This bot has been made possible from CodeStix's existing Reddit bot.

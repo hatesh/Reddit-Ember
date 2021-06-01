@@ -23,6 +23,7 @@ export interface Submission {
   permalink: string
   score: number
   is_video: boolean
+  comments?: Listing<Comment>
 }
 
 export interface RedditUser {
@@ -47,6 +48,16 @@ export interface Listing<T> {
     kind: string
     data: T
   }[]
+}
+
+export interface Comment {
+  score: number
+  body: string
+  author: string
+  score_hidden: boolean
+  replies: {
+    data: Listing<Comment>
+  }
 }
 
 export function getRandomDefaultUserIcon() {

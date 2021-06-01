@@ -9,8 +9,10 @@ import {
   getSubmission,
   getSubredditInfo,
   Submission,
+  Comment,
+  Listing,
 } from './reddit'
-import { GuildSettings, GuildSettingsManager } from './guild_settings_manager'
+import { GuildSettings } from './guild_settings_manager'
 import cheerio from 'cheerio'
 import fetch from 'node-fetch'
 import { TopGGApi } from './topgg'
@@ -19,16 +21,14 @@ import { createUnknownErrorEmbed, RedditBotError } from './error'
 
 const logger = debug('reb')
 
-// const guildSettingsManager = new GuildSettingsManager('./guild_settings.json')
-
 const ember = new Ember(config.discord_token!, config.prefix ?? 'r/')
 // config.topgg_token ? new TopGGApi(config.topgg_token, ember.getBot()) : null
-
-// if (config.topgg_token && config.topgg_token !== null) new TopGGApi(config.topgg_token, ember.getBot())
 
 const DEFAULT_EMBED_COLOR = '#2f3136' // 55ff11
 const TRUNCATE_TITLE_LENGTH = 200 // Max is 256
 const TRUNCATE_DESCRIPTION_LENGTH = 1000
+const TRUNCATE_COMMENTS_LENGTH = 1000 // MAX_COMMENTS_LENGTH + MAX_DESCRIPTION_LENGTH is max 2048
+const TRUNCATE_COMMENT_LENGTH = 400
 
 ember.on('redditUrl', async (props: RedditUrlMessageHandlerProps) => {
   logger('redditurl', props.submissionId)
@@ -52,6 +52,8 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
   let urlToSubmission = encodeURI('https://www.reddit.com' + submission.permalink)
   let urlIsAttachment = urlToSubmission !== submission.url
   let attachment = urlIsAttachment ? await getUnpackedUrl(submission.url) : null
+  let containsCommentSection = false
+  let commentSectionMaxThreadCount = urlIsAttachment ? 2 : 5
 
   const guild_settings: GuildSettings = ember.guildSettingsManager.getServerSettings(guild_id)
 
@@ -61,12 +63,23 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
     let footerText = `On r/${submission.subreddit}`
     let userIcon = await getRedditUserIcon(submission.author)
     let subredditInfo = await getSubredditInfo(submission.subreddit)
-    let details = await getSubmission(submission.id)
+    let details = await getSubmission(submission.id, 3)
 
     // Description of summary post
     let descriptionBuilder = ''
     descriptionBuilder += numberToEmojiNumber(submission.score, false) + '\n'
     descriptionBuilder += truncateString(submission.selftext, TRUNCATE_DESCRIPTION_LENGTH)
+
+    // Comments
+    if (guild_settings.include_comments) {
+      if (details && details.comments) {
+        descriptionBuilder += truncateString(
+          createCommentSection(details.comments, commentSectionMaxThreadCount),
+          TRUNCATE_COMMENTS_LENGTH
+        )
+        containsCommentSection = true
+      }
+    }
 
     // create embed and send to discord (can be edited later)
     let embed = new MessageEmbed()
@@ -87,6 +100,17 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
 
     if (embedTasks.length > 0) {
       await Promise.all(embedTasks as any)
+
+      if (guild_settings.include_comments) {
+        if (!containsCommentSection && details && details.comments) {
+          descriptionBuilder += truncateString(
+            createCommentSection(details.comments, commentSectionMaxThreadCount),
+            TRUNCATE_COMMENTS_LENGTH
+          )
+        } else {
+          logger('details is null')
+        }
+      }
 
       embed.setDescription(descriptionBuilder)
       embed.setAuthor(submission.author, userIcon ?? getRandomDefaultUserIcon())
@@ -136,6 +160,23 @@ async function preloadSubmission(submission: Submission) {
   } catch (ex) {
     logger('error while preloading', ex)
   }
+}
+
+function createCommentSection(comments: Listing<Comment>, maxThreads: number = 3): string {
+  let builder = '\n'
+  for (let i = 0, j = 0; j < maxThreads && i < comments?.children.length; i++) {
+    let comment = comments.children[i]?.data
+    if (comment.score_hidden) continue
+    // builder += "\n";
+
+    let level = 0
+    while (comment && comment.body) {
+      builder += createIndentedComment(comment, level++)
+      comment = comment.replies?.data?.children[0]?.data
+    }
+    j++
+  }
+  return builder
 }
 
 async function getUnpackedUrl(url: string): Promise<string | null> {
@@ -255,6 +296,25 @@ function numberToEmojiNumber(num: number, small: boolean = false) {
     }
   }
   return out
+}
+
+function createIndentedComment(comment: Comment, level: number) {
+  let title = `**${numberToEmojiNumber(comment.score, true)}** __${comment.author}__`
+  let body = truncateString(comment.body, TRUNCATE_COMMENT_LENGTH).replace(/\n/g, ' ')
+
+  if (level === 0) return '> ' + title + '\n> ' + body + '\n'
+
+  const MAX_WIDTH = 76 // discord embeds have a width of 75 characters
+  let width = MAX_WIDTH - level * 5
+  let out = ''
+  let indent = ''
+  for (var i = 0; i < level; i++) indent += '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'
+  for (var i = 0; i < body.length / width; i++) {
+    if ((i + 1) * width < body.length) out += '> ' + indent + body.substring(i * width, (i + 1) * width) + '\n'
+    else out += '> ' + indent + body.substring(i * width) + '\n'
+  }
+
+  return '> ' + indent + title + '\n' + out
 }
 
 function truncateString(str: string, maxLength: number) {
