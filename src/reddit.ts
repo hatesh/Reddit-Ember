@@ -6,6 +6,8 @@ const logger = debug('rdb:reddit')
 
 const API_BASE = 'https://api.reddit.com'
 
+const DEFAULT_COMMENT_SORT = 'top'
+export type CommentSortMode = 'confidence' | 'top' | 'new' | 'controversial' | 'old' | 'random'
 export type RedditFetchErrorType = 'not-found' | 'private' | 'banned' | 'unknown'
 
 // Do not rename these fields! They come directly from the reddit API
@@ -176,12 +178,22 @@ export async function getRedditUserIcon(userName: string): Promise<string | null
   }
 }
 
-export async function fetchSubmission(submissionId: string, maxDepth: number = 2): Promise<Submission> {
-  let url = `${API_BASE}/comments/${submissionId}?depth=${maxDepth}&limit=${maxDepth}`
+export async function fetchSubmission(
+  submissionId: string,
+  maxDepth: number = 2,
+  commentSortMode: CommentSortMode = DEFAULT_COMMENT_SORT
+): Promise<Submission> {
+  let url = `${API_BASE}/comments/${submissionId}?depth=${maxDepth}&limit=${maxDepth}&sort=${commentSortMode}`
   let listings = parseArrayListing(await fetchJson(url))
-  return (listings[0] as Listing<Submission>).children[0].data
+  let submission = (listings[0] as Listing<Submission>).children[0].data
+  submission.comments = listings[1]
+  return submission
 }
 
-export async function getSubmission(submissionId: string, maxDepth: number = 2): Promise<Submission | null> {
-  return await fetchSubmission(submissionId, maxDepth)
+export async function getSubmission(
+  submissionId: string,
+  maxDepth: number = 2,
+  commentSortMode: CommentSortMode = DEFAULT_COMMENT_SORT
+): Promise<Submission | null> {
+  return await fetchSubmission(submissionId, maxDepth, commentSortMode)
 }

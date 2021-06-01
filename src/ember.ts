@@ -74,8 +74,8 @@ export class Ember extends EventEmitter {
   private checkForSettings(message: Message) {
     let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
     if (raw.startsWith('setting')) this.sendSettings(message)
-    else if (raw === 'post summary') this.changePostAllowed(message, true)
-    else if (raw === 'embed only') this.changePostAllowed(message, false)
+    else if (raw.startsWith('post')) this.changePostAllowed(message, true)
+    else if (raw.startsWith('embed')) this.changePostAllowed(message, false)
     else if (raw.startsWith('clean')) this.changeSuppressAllowed(message, true)
     else if (raw.startsWith('keep')) this.changeSuppressAllowed(message, false)
     else if (raw.startsWith('show')) this.changeIncludeComments(message, true)
