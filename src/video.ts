@@ -118,6 +118,7 @@ export async function compressVideo(
   targetFramerate: number = 24,
   targetAudioBitrate: number = 35000
 ) {
+  if (!fs.existsSync(FFMPEG_CACHE_PATH)) fs.mkdirSync(FFMPEG_CACHE_PATH)
   let passLogPath = path.join(FFMPEG_CACHE_PATH, 'passlog' + ffmpegCurrentPassLog++)
 
   try {
