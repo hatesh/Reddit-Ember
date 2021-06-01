@@ -1,5 +1,4 @@
 import JSONdb from 'simple-json-db'
-import { Guild, Snowflake } from 'discord.js'
 
 export interface GuildSettings {
   post_message: boolean
@@ -27,7 +26,7 @@ export class GuildSettingsManager {
   public setPostMessageAllowed(guild_id: string, allowed: boolean = true) {
     if (!this.db.has(guild_id)) this.db.set(guild_id, new DefaultGuildSettings())
     let settings: GuildSettings | any = this.db.get(guild_id)
-    settings.post_message = true
+    settings.post_message = allowed
     this.db.set(guild_id, settings)
   }
 

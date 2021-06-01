@@ -4,7 +4,7 @@ import { EventEmitter } from 'events'
 import { getVideoOrDownload } from './video'
 import crypto from 'crypto'
 import { createUnknownErrorEmbed, RedditBotError } from './error'
-import { GuildSettingsManager } from './server_settings'
+import { GuildSettingsManager } from './guild_settings_manager'
 // @ts-ignore
 import packageConfig from '../package.json'
 

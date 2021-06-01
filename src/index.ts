@@ -10,7 +10,7 @@ import {
   getSubredditInfo,
   Submission,
 } from './reddit'
-import { GuildSettings, GuildSettingsManager } from './server_settings'
+import { GuildSettings, GuildSettingsManager } from './guild_settings_manager'
 import cheerio from 'cheerio'
 import fetch from 'node-fetch'
 import { TopGGApi } from './topgg'
