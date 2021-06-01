@@ -65,6 +65,7 @@ export class Ember extends EventEmitter {
     if (message.content.startsWith(this.prefix)) {
       this.checkForHelp(message)
       this.checkForPermissions(message)
+      this.checkForSettings(message)
     } else if (message.content.startsWith('https://www.reddit.com/r/')) this.handleRedditUrlMessage(message)
   }
 
