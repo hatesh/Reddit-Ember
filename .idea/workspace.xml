@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d4bba61e-c777-4dc7-9a54-6cf729f82292" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ember.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/ember.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server_settings.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/server_settings.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,7 +89,7 @@
       <workItem from="1621874249989" duration="7641000" />
       <workItem from="1621882024825" duration="266000" />
       <workItem from="1622042624093" duration="4361000" />
-      <workItem from="1622557259601" duration="8805000" />
+      <workItem from="1622557259601" duration="9622000" />
     </task>
     <servers />
   </component>

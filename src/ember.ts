@@ -5,6 +5,8 @@ import { getVideoOrDownload } from './video'
 import crypto from 'crypto'
 import { createUnknownErrorEmbed, RedditBotError } from './error'
 import { GuildSettingsManager } from './server_settings'
+// @ts-ignore
+import packageConfig from '../package.json'
 
 const logger = debug('rdb:bot')
 
@@ -71,13 +73,18 @@ export class Ember extends EventEmitter {
 
   private checkForSettings(message: Message) {
     let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
-    if (raw === 'post summary') this.changePostAllowed(message, true)
-    if (raw === 'embed only') this.changePostAllowed(message, false)
+    if (raw.startsWith('setting')) this.sendSettings(message)
+    else if (raw === 'post summary') this.changePostAllowed(message, true)
+    else if (raw === 'embed only') this.changePostAllowed(message, false)
+  }
+
+  private sendSettings(message: Message) {
+    message.channel.send(this.guildSettingsManager.generateSettingsFromGuildId(<string>message.guild?.id.toString()))
   }
 
   private changePostAllowed(message: Message, allowed: boolean) {
     this.guildSettingsManager.setPostMessageAllowed(<string>message.guild?.id.toString(), allowed)
-    message.channel.send(`Ember will ${allowed ? 'now' : 'no longer'} send post information replies.`)
+    message.channel.send(this.guildSettingsManager.postAllowedString(allowed))
   }
 
   private checkForPermissions(message: Message) {
@@ -135,12 +142,17 @@ export class Ember extends EventEmitter {
   }
 
   private static createHelpEmbed() {
-    return new MessageEmbed().setTitle('Ember Help').setColor('#FF4301').setDescription(`
+    return new MessageEmbed()
+      .setTitle('Ember Help')
+      .setColor('#FF4301')
+      .setDescription(
+        `
             **You can paste a reddit url and I will embed the content of the post into channel!**
             
             Commands:
             To see this help command, send \`r/help\`.
             To check whether Ember's permissions are correct, send \`r/permissions\`.
+            To check your Server Specific settings are, send \`r/settings\`.
             
             Server Specific Settings:
             If you would to have a post summary included, send \`r/post summary\`.
@@ -148,7 +160,11 @@ export class Ember extends EventEmitter {
 
             This bot has been made possible from CodeStix's existing Reddit bot.
             ❤️ Thanks for using this bot! If you like it, you should consider [voting for this bot](https://top.gg/bot/847140331450531872) and/or [voting for their bot](https://top.gg/bot/711524405163065385).
-        `)
+            
+            [My code lives here!](https://github.com/hatesh/Reddit-Ember)
+        `
+      )
+      .setFooter(`Version: ${packageConfig.version}`, 'https://avatars.githubusercontent.com/u/43727025')
   }
 
   private rateLimit(channelId: string): boolean {
