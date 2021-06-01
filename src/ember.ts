@@ -59,7 +59,7 @@ export class Ember extends EventEmitter {
 
   private updatePresence() {
     logger('updating presence')
-    this.bot.user!.setPresence({ status: 'online', activity: { type: 'LISTENING', name: this.prefix + ' help' } })
+    this.bot.user!.setPresence({ status: 'online', activity: { type: 'LISTENING', name: this.prefix + 'help' } })
   }
 
   private handleMessage(message: Message) {
@@ -76,10 +76,20 @@ export class Ember extends EventEmitter {
     if (raw.startsWith('setting')) this.sendSettings(message)
     else if (raw === 'post summary') this.changePostAllowed(message, true)
     else if (raw === 'embed only') this.changePostAllowed(message, false)
+    else if (raw.startsWith('clean')) this.changeSuppressAllowed(message, true)
+    else if (raw.startsWith('keep')) this.changeSuppressAllowed(message, false)
   }
 
   private sendSettings(message: Message) {
     message.channel.send(this.guildSettingsManager.generateSettingsFromGuildId(<string>message.guild?.id.toString()))
+  }
+
+  private changeSuppressAllowed(message: Message, allowed: boolean) {
+    this.guildSettingsManager.setSuppressAllowed(
+      <string>message.guild?.id.toString(),
+      allowed && message.guild!.me!.permissions.has('MANAGE_MESSAGES')
+    )
+    message.channel.send(this.guildSettingsManager.suppressAllowedString(allowed))
   }
 
   private changePostAllowed(message: Message, allowed: boolean) {
@@ -144,7 +154,7 @@ export class Ember extends EventEmitter {
   private static createHelpEmbed() {
     return new MessageEmbed()
       .setTitle('Ember Help')
-      .setColor('#FF4301')
+      .setColor('#DD2D04')
       .setDescription(
         `
             **You can paste a reddit url and I will embed the content of the post into channel!**
@@ -155,9 +165,16 @@ export class Ember extends EventEmitter {
             To check your Server Specific settings are, send \`r/settings\`.
             
             Server Specific Settings:
-            If you would to have a post summary included, send \`r/post summary\`.
-            If you would rather just have the media content embedded, send \`r/embed only\`.
-
+              Post Summary
+                If you would to have a post summary included, send \`r/post summary\`.
+                If you would rather just have the media content embedded, send \`r/embed only\`.
+              Discord Auto Embeds
+                If you would like to remove the Auto Discord Embed add to the original message, send \`r/clean message\`.
+                  ***Note:** This will the bot to have Manage Messages permissions, double check what the bot as been given*
+                If you would like to leave the Auto Discord Embed, send \`r/keep message\`.
+                ***Note:** Only one out of post summary and keep original embeds can be active at one time.*
+              
+            
             This bot has been made possible from CodeStix's existing Reddit bot.
             ❤️ Thanks for using this bot! If you like it, you should consider [voting for this bot](https://top.gg/bot/847140331450531872) and/or [voting for their bot](https://top.gg/bot/711524405163065385).
             
@@ -196,7 +213,8 @@ export class Ember extends EventEmitter {
     super.emit('redditUrl', props)
 
     // Remove default embed
-    setTimeout(() => message.suppressEmbeds(true), 100)
+    if (this.guildSettingsManager.getServerSettings(<string>message.guild?.id).suppress_web_embed)
+      setTimeout(() => message.suppressEmbeds(true), 100)
   }
 
   private getUrlName(url: string) {

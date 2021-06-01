@@ -2,10 +2,12 @@ import JSONdb from 'simple-json-db'
 
 export interface GuildSettings {
   post_message: boolean
+  suppress_web_embed: boolean
 }
 
 class DefaultGuildSettings implements GuildSettings {
   post_message = true
+  suppress_web_embed = true
 }
 
 export class GuildSettingsManager {
@@ -24,19 +26,35 @@ export class GuildSettingsManager {
   }
 
   public setPostMessageAllowed(guild_id: string, allowed: boolean = true) {
-    if (!this.db.has(guild_id)) this.db.set(guild_id, new DefaultGuildSettings())
-    let settings: GuildSettings | any = this.db.get(guild_id)
+    let settings: GuildSettings | any = this.getServerSettings(guild_id)
     settings.post_message = allowed
+    settings.suppress_web_embed = !allowed // recommended
+    this.db.set(guild_id, settings)
+  }
+
+  public setSuppressAllowed(guild_id: string, allowed: boolean = true) {
+    let settings: GuildSettings | any = this.getServerSettings(guild_id)
+    settings.suppress_web_embed = allowed
+    settings.post_message = !allowed // recommended
     this.db.set(guild_id, settings)
   }
 
   public generateSettingsFromGuildId(guild_id: string): string {
     const settings: GuildSettings | any = this.db.get(guild_id)
-    return this.postAllowedString(settings.post_message)
+    return this.generateSettingsFromSettings(settings)
   }
 
   public generateSettingsFromSettings(settings: GuildSettings): string {
-    return this.postAllowedString(settings.post_message)
+    return (
+      this.postAllowedString(settings.post_message) +
+      '\n' +
+      this.suppressAllowedString(settings.suppress_web_embed) +
+      '\n'
+    )
+  }
+
+  public suppressAllowedString(allowed: boolean): string {
+    return `Ember will ${allowed ? 'clean' : 'leave'} the discord auto embeds in the users message.`
   }
 
   public postAllowedString(allowed: boolean): string {
