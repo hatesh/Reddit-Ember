@@ -61,7 +61,13 @@ export class Ember extends EventEmitter {
     else if (message.content.startsWith('https://www.reddit.com/r/')) this.handleRedditUrlMessage(message)
   }
 
-  private checkForHelp(message: Message) {
+  private checkForPermissions(message: Message) {
+    this.createPermissionsMessage(message, false)
+    let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
+    if (raw.startsWith('perm')) this.createPermissionsMessage(message, true)
+  }
+
+  private createPermissionsMessage(message: Message, reportCorrect: boolean = false) {
     let permissions = message.guild!.me!.permissions
     if (
       !permissions.has('ATTACH_FILES') ||
@@ -75,27 +81,47 @@ export class Ember extends EventEmitter {
         message.channel.send(
           this.createErrorEmbed(
             'No Discord permissions',
-            'You disabled my powers! Please allow me to **send messages**, **manage messages**, **embed links**, **add reactions** and **attach files**.'
+            'You disabled my powers! Please allow me to ' +
+              (!permissions.has('SEND_MESSAGES') ? '**send messages**, ' : '') +
+              (!permissions.has('EMBED_LINKS') ? '**embed links**, ' : '') +
+              (!permissions.has('MANAGE_MESSAGES') ? '**manage messages**, ' : '') +
+              (!permissions.has('ADD_REACTIONS') ? '**add reactions**, ' : '') +
+              (!permissions.has('ATTACH_FILES') ? '**attach files**.' : '.')
           )
         )
       } else {
         message.channel.send(
-          'You disabled my powers! Please allow me to **send messages**, **manage messages**, **embed links**, **add reactions** and **attach files**.'
+          'You disabled my powers! Please allow me to `' +
+            (!permissions.has('SEND_MESSAGES') ? '**send messages**, ' : '') +
+            (!permissions.has('EMBED_LINKS') ? '**embed links**, ' : '') +
+            (!permissions.has('MANAGE_MESSAGES') ? '**manage messages**, ' : '') +
+            (!permissions.has('ADD_REACTIONS') ? '**add reactions**, ' : '') +
+            (!permissions.has('ATTACH_FILES') ? '**attach files**.' : '.')
         )
       }
+    } else if (reportCorrect) {
+      if (permissions.has('EMBED_LINKS')) {
+        message.channel.send(
+          this.createErrorEmbed('Permissions Correct', 'You have given the bot all the correct permissions!')
+        )
+      } else {
+        message.channel.send('Permissions have been set up correctly!')
+      }
     }
+  }
+
+  private checkForHelp(message: Message) {
+    this.createPermissionsMessage(message, false)
     let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
     if (!raw || raw === 'help' || raw === 'h' || raw === '?') message.channel.send(Ember.createHelpEmbed())
   }
 
   private static createHelpEmbed() {
-    return new MessageEmbed().setTitle('Reddit Bot Help').setColor('#FF4301').setDescription(`
+    return new MessageEmbed().setTitle('Ember Help').setColor('#FF4301').setDescription(`
             **You can paste a reddit url and I will embed the content of the post into channel!**
 
-            This bot has been made possible from CodeStix's Reddit bot.
-            ❤️ Thanks for using this bot! If you like it, you should consider 
-            [voting for this bot](https://top.gg/bot/847140331450531872) and/or 
-            [voting for their bot](https://top.gg/bot/711524405163065385).
+            This bot has been made possible from CodeStix's existing Reddit bot.
+            ❤️ Thanks for using this bot! If you like it, you should consider [voting for this bot](https://top.gg/bot/847140331450531872) and/or [voting for their bot](https://top.gg/bot/711524405163065385).
         `)
   }
 
