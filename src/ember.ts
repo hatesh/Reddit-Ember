@@ -127,7 +127,7 @@ export class Ember extends EventEmitter {
     } else if (reportCorrect) {
       if (permissions.has('EMBED_LINKS')) {
         message.channel.send(
-          this.createErrorEmbed('Permissions Correct', 'You have given the bot all the correct permissions!')
+          this.createSuccessEmbed('Permissions Correct', 'You have given the bot all the correct permissions!')
         )
       } else {
         message.channel.send('Permissions have been set up correctly!')
@@ -237,11 +237,15 @@ export class Ember extends EventEmitter {
     }
   }
 
+  public createSuccessEmbed(title: string, message: string): MessageEmbed {
+    return new MessageEmbed().setTitle(`✔ ${title}`).setDescription(message).setColor('#4CAF50')
+  }
+
   public createErrorEmbed(title: string, message: string): MessageEmbed {
     return new MessageEmbed().setTitle(`❌ ${title}`).setDescription(message).setColor('#FF4301')
   }
 
   public createWarningEmbed(title: string, message: string): MessageEmbed {
-    return new MessageEmbed().setTitle(`⚠️ ${title}`).setDescription(message).setColor('#FF4301')
+    return new MessageEmbed().setTitle(`⚠️ ${title}`).setDescription(message).setColor('#FFC107')
   }
 }
