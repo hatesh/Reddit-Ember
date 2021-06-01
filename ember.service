@@ -1,0 +1,16 @@
+[Unit]
+Description="Reddit Ember Embedder Discord Bot"
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=-git pull
+ExecStartPre=-yarn install
+ExecStart=npm run start
+Restart=on-failure
+WorkingDirectory=/opt/discord_bots/RedditEmber
+User=hatesh
+
+[Install]
+WantedBy=multi-user.target
+
