@@ -14,7 +14,8 @@
     "migrate": "ts-node src/util/migrate.ts",
     "build": "tsc",
     "clean": "npx prettier --write .",
-    "check": "npx prettier --check ."
+    "check": "npx prettier --check .",
+    "start": "ts-node src/index.ts"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.29",
