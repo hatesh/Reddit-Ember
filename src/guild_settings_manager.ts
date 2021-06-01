@@ -48,8 +48,7 @@ export class GuildSettingsManager {
   }
 
   public generateSettingsFromGuildId(guild_id: string): string {
-    const settings: GuildSettings | any = this.db.get(guild_id)
-    return this.generateSettingsFromSettings(settings)
+    return this.generateSettingsFromSettings(this.getServerSettings(guild_id))
   }
 
   public generateSettingsFromSettings(settings: GuildSettings): string {
