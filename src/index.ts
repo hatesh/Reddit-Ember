@@ -19,6 +19,7 @@ import { createUnknownErrorEmbed, RedditBotError } from './error'
 const logger = debug('rdb')
 
 const ember = new Ember(config.discord_token!, config.prefix ?? 'r/')
+// config.topgg_token ? new TopGGApi(config.topgg_token, ember.getBot()) : null
 
 // if (config.topgg_token && config.topgg_token !== null) new TopGGApi(config.topgg_token, ember.getBot())
 
@@ -119,7 +120,7 @@ async function preloadSubmission(submission: Submission) {
   let tasks = []
   tasks.push(getRedditUserIcon(submission.author))
   tasks.push(getSubredditInfo(submission.subreddit))
-  tasks.push(getSubmission(submission.id, 3))
+  tasks.push(getSubmission(submission.id,  3))
   if (urlIsAttachment) tasks.push(getUnpackedUrl(submission.url).then(preloadAttachment))
 
   try {
