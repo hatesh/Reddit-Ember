@@ -6,8 +6,8 @@ import { exec } from 'child_process'
 import util from 'util'
 import { RedditBotError } from './error'
 
-const VIDEO_CACHE_PATH = path.join(__dirname, 'cache/videos')
-const FFMPEG_CACHE_PATH = path.join(__dirname, 'cache/ffmpeg')
+const VIDEO_CACHE_PATH = '/tmp/cache/videos'
+const FFMPEG_CACHE_PATH = '/tmp/cache/ffmpeg'
 const DEFAULT_VIDEO_SIZE_LIMIT = 1000 * 1000 * 8 // 8mb
 const MAX_VIDEO_DOWNLOAD_SIZE = 1000 * 1000 * 100 // 100mb
 const MAX_VIDEO_COMPRESS_LENGTH = 110 // Cut video to 110 seconds when compressing

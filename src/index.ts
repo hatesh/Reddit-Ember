@@ -19,7 +19,9 @@ import { createUnknownErrorEmbed, RedditBotError } from './error'
 const logger = debug('rdb')
 
 const ember = new Ember(config.discord_token!, config.prefix ?? 'r/')
-const topgg = config.topgg_token ? new TopGGApi(config.topgg_token, ember.getBot()) : null
+
+// if (config.topgg_token && config.topgg_token !== null) new TopGGApi(config.topgg_token, ember.getBot())
+
 
 const DEFAULT_EMBED_COLOR = '#2f3136' // 55ff11
 const TRUNCATE_TITLE_LENGTH = 200 // Max is 256
@@ -117,7 +119,7 @@ async function preloadSubmission(submission: Submission) {
   let tasks = []
   tasks.push(getRedditUserIcon(submission.author))
   tasks.push(getSubredditInfo(submission.subreddit))
-  tasks.push(getSubmission(submission.id, false, 3))
+  tasks.push(getSubmission(submission.id, 3))
   if (urlIsAttachment) tasks.push(getUnpackedUrl(submission.url).then(preloadAttachment))
 
   try {

@@ -4,5 +4,3 @@
   "debug": "=*,-follow-redirects",
   "prefix": "r/"
 }
-
-

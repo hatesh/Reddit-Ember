@@ -20,7 +20,8 @@ export interface RedditUrlMessageHandlerProps {
   submissionId: string
 }
 
-const REDDIT_URL_REGEX = /^https?:\/\/(?:www\.)?reddit\.com\/(?:r\/(?<subredditName>[\w\d]+)\/)?comments\/(?<submissionId>[\w\d]+)/i
+const REDDIT_URL_REGEX =
+  /^https?:\/\/(?:www\.)?reddit\.com\/(?:r\/(?<subredditName>[\w\d]+)\/)?comments\/(?<submissionId>[\w\d]+)/i
 
 export class Ember extends EventEmitter {
   public prefix: string
