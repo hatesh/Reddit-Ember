@@ -52,7 +52,7 @@ export class Ember extends EventEmitter {
 
   private updatePresence() {
     logger('updating presence')
-    this.bot.user!.setPresence({ status: 'online', activity: { type: 'LISTENING', name: this.prefix } })
+    this.bot.user!.setPresence({ status: 'online', activity: { type: 'LISTENING', name: this.prefix + ' help' } })
   }
 
   private handleMessage(message: Message) {
@@ -90,12 +90,12 @@ export class Ember extends EventEmitter {
 
   private static createHelpEmbed() {
     return new MessageEmbed().setTitle('Reddit Bot Help').setColor('#FF4301').setDescription(`
-            **You can paste a reddit url, I will convert it into a nice styled message.**
+            **You can paste a reddit url and I will embed the content of the post into channel!**
 
             This bot has been made possible from CodeStix's Reddit bot.
-            ❤️ Thanks for using this bot! If you like it, you should consider [voting for his bot](https://top.gg/bot/711524405163065385).
-            
-            [More information here](https://codestix.nl/article/reddit-discord-bot)
+            ❤️ Thanks for using this bot! If you like it, you should consider 
+            [voting for this bot](https://top.gg/bot/847140331450531872) and/or 
+            [voting for their bot](https://top.gg/bot/711524405163065385).
         `)
   }
 

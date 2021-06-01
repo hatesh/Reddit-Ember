@@ -23,7 +23,6 @@ const ember = new Ember(config.discord_token!, config.prefix ?? 'r/')
 
 // if (config.topgg_token && config.topgg_token !== null) new TopGGApi(config.topgg_token, ember.getBot())
 
-
 const DEFAULT_EMBED_COLOR = '#2f3136' // 55ff11
 const TRUNCATE_TITLE_LENGTH = 200 // Max is 256
 const TRUNCATE_DESCRIPTION_LENGTH = 1000
@@ -51,7 +50,7 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
   let urlToAuthor = encodeURI('https://www.reddit.com/u/' + submission.author)
   let urlIsAttachment = urlToSubmission !== submission.url
   let footerText = `On r/${submission.subreddit}`
-  footerText += `/${query}`
+  if (query) footerText += `/${query}`
 
   let userIcon = await getRedditUserIcon(submission.author)
   let subredditInfo = await getSubredditInfo(submission.subreddit)
@@ -59,7 +58,7 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
   let details = await getSubmission(submission.id)
 
   let descriptionBuilder = ''
-  descriptionBuilder += numberToEmojiNumber(submission.score, true) + '\n'
+  descriptionBuilder += numberToEmojiNumber(submission.score, false) + '\n'
   descriptionBuilder += truncateString(submission.selftext, TRUNCATE_DESCRIPTION_LENGTH)
 
   let embed = new MessageEmbed()
@@ -120,7 +119,7 @@ async function preloadSubmission(submission: Submission) {
   let tasks = []
   tasks.push(getRedditUserIcon(submission.author))
   tasks.push(getSubredditInfo(submission.subreddit))
-  tasks.push(getSubmission(submission.id,  3))
+  tasks.push(getSubmission(submission.id, 3))
   if (urlIsAttachment) tasks.push(getUnpackedUrl(submission.url).then(preloadAttachment))
 
   try {
