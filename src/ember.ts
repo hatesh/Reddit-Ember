@@ -89,6 +89,7 @@ export class Ember extends EventEmitter {
 
   private changeIncludeComments(message: Message, allowed: boolean) {
     this.guildSettingsManager.setCommentsAllowed(<string>message.guild?.id.toString(), allowed)
+    message.channel.send(this.guildSettingsManager.includeCommentsString(allowed))
   }
 
   private changeSuppressAllowed(message: Message, allowed: boolean) {
