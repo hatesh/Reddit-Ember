@@ -8,7 +8,7 @@ import { GuildSettingsManager } from './guild_settings_manager'
 // @ts-ignore
 import packageConfig from '../package.json'
 
-const logger = debug('rdb:bot')
+const logger = debug('reb:ember')
 
 export interface SubredditMessageHandlerProps {
   channel: TextChannel
@@ -249,8 +249,13 @@ export class Ember extends EventEmitter {
     super.emit('redditUrl', props)
 
     // Remove default embed
-    if (this.guildSettingsManager.getServerSettings(<string>message.guild?.id).suppress_web_embed)
-      setTimeout(() => message.suppressEmbeds(true), 100)
+    if (this.guildSettingsManager.getServerSettings(<string>message.guild?.id).suppress_web_embed) {
+      if (message.guild!.me!.permissions.has('MANAGE_MESSAGES')) {
+        setTimeout(() => message.suppressEmbeds(true), 100)
+      } else {
+        this.guildSettingsManager.setSuppressAllowed(<string>message.guild?.id, false)
+      }
+    }
   }
 
   private getUrlName(url: string) {

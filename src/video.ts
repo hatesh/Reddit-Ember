@@ -14,7 +14,7 @@ const MAX_VIDEO_COMPRESS_LENGTH = 110 // Cut video to 110 seconds when compressi
 const MAX_VIDEO_LENGTH = 60 * 4 // Skip compressing if larger 4 minutes
 
 const execAsync = util.promisify(exec)
-const logger = debug('rdb:video')
+const logger = debug('reb:video')
 
 let ffmpegCurrentPassLog = 0
 let videoWaiters: any = {}

@@ -2,7 +2,7 @@ import { debug } from 'debug'
 import fetch from 'node-fetch'
 import { RedditBotError } from './error'
 
-const logger = debug('rdb:reddit')
+const logger = debug('reb:reddit')
 
 const API_BASE = 'https://api.reddit.com'
 

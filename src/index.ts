@@ -47,6 +47,7 @@ ember.on('redditUrl', async (props: RedditUrlMessageHandlerProps) => {
 })
 
 async function sendRedditSubmission(channel: TextChannel, submission: Submission, guild_id: string | undefined) {
+  // Extract post information
   let nsfw = submission.over_18 || submission.title.toLowerCase().includes('nsf')
   let asSpoiler = submission.spoiler || nsfw
   let urlToSubmission = encodeURI('https://www.reddit.com' + submission.permalink)
@@ -55,6 +56,7 @@ async function sendRedditSubmission(channel: TextChannel, submission: Submission
   let containsCommentSection = false
   let commentSectionMaxThreadCount = urlIsAttachment ? 2 : 5
 
+  // Get Server config
   const guild_settings: GuildSettings = ember.guildSettingsManager.getServerSettings(guild_id)
 
   if (guild_settings.post_message) {
