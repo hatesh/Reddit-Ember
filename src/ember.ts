@@ -4,6 +4,7 @@ import { EventEmitter } from 'events'
 import { getVideoOrDownload } from './video'
 import crypto from 'crypto'
 import { createUnknownErrorEmbed, RedditBotError } from './error'
+import { GuildSettingsManager } from './server_settings'
 
 const logger = debug('rdb:bot')
 
@@ -18,6 +19,7 @@ export interface RedditUrlMessageHandlerProps {
   channel: TextChannel
   sender: User
   submissionId: string
+  guildId: string | undefined
 }
 
 const REDDIT_URL_REGEX =
@@ -30,6 +32,8 @@ export class Ember extends EventEmitter {
   private processingChannels: any = {}
   private readonly bot: DiscordBot
 
+  public guildSettingsManager: GuildSettingsManager
+
   constructor(token: string, prefix: string) {
     super()
     this.prefix = prefix
@@ -38,6 +42,7 @@ export class Ember extends EventEmitter {
     this.bot.on('message', this.handleMessage.bind(this))
     logger('connecting to Discord...')
     this.bot.login(token)
+    this.guildSettingsManager = new GuildSettingsManager('./guild_settings.json')
   }
 
   public getBot(): DiscordBot {
@@ -57,12 +62,24 @@ export class Ember extends EventEmitter {
 
   private handleMessage(message: Message) {
     if (message.channel.type !== 'text' || message.author.bot) return
-    if (message.content.startsWith(this.prefix)) this.checkForHelp(message)
-    else if (message.content.startsWith('https://www.reddit.com/r/')) this.handleRedditUrlMessage(message)
+    if (message.content.startsWith(this.prefix)) {
+      this.checkForHelp(message)
+      this.checkForPermissions(message)
+    } else if (message.content.startsWith('https://www.reddit.com/r/')) this.handleRedditUrlMessage(message)
+  }
+
+  private checkForSettings(message: Message) {
+    let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
+    if (raw === 'post summary') this.changePostAllowed(message, true)
+    if (raw === 'embed only') this.changePostAllowed(message, false)
+  }
+
+  private changePostAllowed(message: Message, allowed: boolean) {
+    this.guildSettingsManager.setPostMessageAllowed(<string>message.guild?.id.toString(), allowed)
+    message.channel.send(`Ember will ${allowed ? 'now' : 'no longer'} send post information replies.`)
   }
 
   private checkForPermissions(message: Message) {
-    this.createPermissionsMessage(message, false)
     let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
     if (raw.startsWith('perm')) this.createPermissionsMessage(message, true)
   }
@@ -148,6 +165,7 @@ export class Ember extends EventEmitter {
       channel: message.channel as TextChannel,
       sender: message.author,
       submissionId: results.groups.submissionId,
+      guildId: message.guild?.id,
     }
 
     super.emit('redditUrl', props)

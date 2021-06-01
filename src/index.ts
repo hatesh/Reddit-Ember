@@ -10,13 +10,16 @@ import {
   getSubredditInfo,
   Submission,
 } from './reddit'
+import { GuildSettings, GuildSettingsManager } from './server_settings'
 import cheerio from 'cheerio'
 import fetch from 'node-fetch'
 import { TopGGApi } from './topgg'
 import { getVideoOrDownload } from './video'
 import { createUnknownErrorEmbed, RedditBotError } from './error'
 
-const logger = debug('rdb')
+const logger = debug('reb')
+
+// const guildSettingsManager = new GuildSettingsManager('./guild_settings.json')
 
 const ember = new Ember(config.discord_token!, config.prefix ?? 'r/')
 // config.topgg_token ? new TopGGApi(config.topgg_token, ember.getBot()) : null
@@ -31,7 +34,7 @@ ember.on('redditUrl', async (props: RedditUrlMessageHandlerProps) => {
   logger('redditurl', props.submissionId)
   try {
     let submission = await fetchSubmission(props.submissionId)
-    await sendRedditSubmission(props.channel, submission)
+    await sendRedditSubmission(props.channel, submission, props.guildId)
   } catch (ex) {
     if (ex instanceof RedditBotError) {
       logger('bot error (%s): %s', ex.type, ex.message)
@@ -43,54 +46,60 @@ ember.on('redditUrl', async (props: RedditUrlMessageHandlerProps) => {
   }
 })
 
-async function sendRedditSubmission(channel: TextChannel, submission: Submission, query?: string) {
+async function sendRedditSubmission(channel: TextChannel, submission: Submission, guild_id: string | undefined) {
   let nsfw = submission.over_18 || submission.title.toLowerCase().includes('nsf')
   let asSpoiler = submission.spoiler || nsfw
   let urlToSubmission = encodeURI('https://www.reddit.com' + submission.permalink)
-  let urlToAuthor = encodeURI('https://www.reddit.com/u/' + submission.author)
   let urlIsAttachment = urlToSubmission !== submission.url
-  let footerText = `On r/${submission.subreddit}`
-  if (query) footerText += `/${query}`
-
-  let userIcon = await getRedditUserIcon(submission.author)
-  let subredditInfo = await getSubredditInfo(submission.subreddit)
   let attachment = urlIsAttachment ? await getUnpackedUrl(submission.url) : null
-  let details = await getSubmission(submission.id)
 
-  let descriptionBuilder = ''
-  descriptionBuilder += numberToEmojiNumber(submission.score, false) + '\n'
-  descriptionBuilder += truncateString(submission.selftext, TRUNCATE_DESCRIPTION_LENGTH)
+  const guild_settings: GuildSettings = ember.guildSettingsManager.getServerSettings(guild_id)
 
-  let embed = new MessageEmbed()
-    .setTitle(truncateString(submission.title, TRUNCATE_TITLE_LENGTH))
-    .setURL(urlToSubmission)
-    .setColor(subredditInfo?.color ?? DEFAULT_EMBED_COLOR)
-    .setTimestamp(submission.created * 1000)
-    .setDescription(descriptionBuilder)
-    .setAuthor(submission.author, userIcon ?? getRandomDefaultUserIcon(), urlToAuthor)
-    .setFooter(footerText, subredditInfo?.icon ?? undefined)
-  let firstSentMessage = channel.send(embed)
+  if (guild_settings.post_message) {
+    // BUILD UP TEXT SUMMARY POST
+    let urlToAuthor = encodeURI('https://www.reddit.com/u/' + submission.author)
+    let footerText = `On r/${submission.subreddit}`
+    let userIcon = await getRedditUserIcon(submission.author)
+    let subredditInfo = await getSubredditInfo(submission.subreddit)
+    let details = await getSubmission(submission.id)
 
-  // Contains tasks that will edit the sent embed
-  let embedTasks = []
-  if (userIcon === null) embedTasks.push(getRedditUserIcon(submission.author).then(e => (userIcon = e)))
-  if (subredditInfo === null) embedTasks.push(getSubredditInfo(submission.subreddit).then(e => (subredditInfo = e)))
-  if (details === null) embedTasks.push(getSubmission(submission.id).then(e => (details = e)))
+    // Description of summary post
+    let descriptionBuilder = ''
+    descriptionBuilder += numberToEmojiNumber(submission.score, false) + '\n'
+    descriptionBuilder += truncateString(submission.selftext, TRUNCATE_DESCRIPTION_LENGTH)
+
+    // create embed and send to discord (can be edited later)
+    let embed = new MessageEmbed()
+      .setTitle(truncateString(submission.title, TRUNCATE_TITLE_LENGTH))
+      .setURL(urlToSubmission)
+      .setColor(subredditInfo?.color ?? DEFAULT_EMBED_COLOR)
+      .setTimestamp(submission.created * 1000)
+      .setDescription(descriptionBuilder)
+      .setAuthor(submission.author, userIcon ?? getRandomDefaultUserIcon(), urlToAuthor)
+      .setFooter(footerText, subredditInfo?.icon ?? undefined)
+    let firstSentMessage = channel.send(embed)
+
+    // Contains tasks that will edit the sent embed
+    let embedTasks = []
+    if (userIcon === null) embedTasks.push(getRedditUserIcon(submission.author).then(e => (userIcon = e)))
+    if (subredditInfo === null) embedTasks.push(getSubredditInfo(submission.subreddit).then(e => (subredditInfo = e)))
+    if (details === null) embedTasks.push(getSubmission(submission.id).then(e => (details = e)))
+
+    if (embedTasks.length > 0) {
+      await Promise.all(embedTasks as any)
+
+      embed.setDescription(descriptionBuilder)
+      embed.setAuthor(submission.author, userIcon ?? getRandomDefaultUserIcon())
+      embed.setColor(subredditInfo?.color ?? DEFAULT_EMBED_COLOR)
+      embed.setFooter(footerText, subredditInfo?.icon ?? undefined)
+
+      await (await firstSentMessage).edit(embed)
+    }
+  }
 
   let otherTasks = []
   if (urlIsAttachment && attachment === null)
     otherTasks.push(getUnpackedUrl(submission.url).then(e => (attachment = e)))
-
-  if (embedTasks.length > 0) {
-    await Promise.all(embedTasks as any)
-
-    embed.setDescription(descriptionBuilder)
-    embed.setAuthor(submission.author, userIcon ?? getRandomDefaultUserIcon())
-    embed.setColor(subredditInfo?.color ?? DEFAULT_EMBED_COLOR)
-    embed.setFooter(footerText, subredditInfo?.icon ?? undefined)
-
-    await (await firstSentMessage).edit(embed)
-  }
 
   if (otherTasks.length > 0) await Promise.all(otherTasks)
 
@@ -178,9 +187,9 @@ async function unpackUrl(url: string): Promise<string> {
         if (elem) url = elem.attr('content') ?? url
       }
 
-      logger('unpackUrl: extracted imgur/postimg url', url)
+      logger('unpackUrl: extracted imgur/posting url', url)
     } catch (ex) {
-      logger('unpackUrl: could not extract imgur/postimg image', ex)
+      logger('unpackUrl: could not extract imgur/posting image', ex)
     }
   }
   return url
