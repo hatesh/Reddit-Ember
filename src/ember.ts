@@ -137,6 +137,14 @@ export class Ember extends EventEmitter {
   private static createHelpEmbed() {
     return new MessageEmbed().setTitle('Ember Help').setColor('#FF4301').setDescription(`
             **You can paste a reddit url and I will embed the content of the post into channel!**
+            
+            Commands:
+            To see this help command, send \`r/help\`.
+            To check whether Ember's permissions are correct, send \`r/permissions\`.
+            
+            Server Specific Settings:
+            If you would to have a post summary included, send \`r/post summary\`.
+            If you would rather just have the media content embedded, send \`r/embed only\`.
 
             This bot has been made possible from CodeStix's existing Reddit bot.
             ❤️ Thanks for using this bot! If you like it, you should consider [voting for this bot](https://top.gg/bot/847140331450531872) and/or [voting for their bot](https://top.gg/bot/711524405163065385).
