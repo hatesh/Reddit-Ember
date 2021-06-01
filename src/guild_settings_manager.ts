@@ -73,7 +73,7 @@ export class GuildSettingsManager {
   }
 
   public postAllowedString(allowed: boolean): string {
-    return `Ember will ${allowed ? 'now' : 'no longer'} send post information replies.`
+    return `Ember will ${allowed ? 'send' : 'not send'} post information replies.`
   }
 
   public includeCommentsString(allowed: boolean): string {
