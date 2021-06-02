@@ -10,13 +10,6 @@ import packageConfig from '../package.json'
 
 const logger = debug('reb:ember')
 
-export interface SubredditMessageHandlerProps {
-  channel: TextChannel
-  sender: User
-  subreddit: string
-  query: string
-}
-
 export interface RedditUrlMessageHandlerProps {
   channel: TextChannel
   sender: User
@@ -73,13 +66,11 @@ export class Ember extends EventEmitter {
 
   private checkForSettings(message: Message) {
     let raw = message.content.substring(this.prefix.length).trim().toLowerCase()
+    const allowed = Ember.stringIncludesTruthy(raw)
     if (raw.startsWith('setting')) this.sendSettings(message)
-    else if (raw.startsWith('post')) this.changePostAllowed(message, true)
-    else if (raw.startsWith('embed')) this.changePostAllowed(message, false)
-    else if (raw.startsWith('clean')) this.changeSuppressAllowed(message, true)
-    else if (raw.startsWith('keep')) this.changeSuppressAllowed(message, false)
-    else if (raw.startsWith('show')) this.changeIncludeComments(message, true)
-    else if (raw.startsWith('hide')) this.changeIncludeComments(message, false)
+    else if (raw.startsWith('sum')) this.changePostAllowed(message, allowed)
+    else if (raw.startsWith('sup')) this.changeSuppressAllowed(message, allowed)
+    else if (raw.startsWith('com')) this.changeIncludeComments(message, allowed)
   }
 
   private changePostAllowed(message: Message, allowed: boolean) {
@@ -106,8 +97,12 @@ export class Ember extends EventEmitter {
 
   private changeSuppressAllowed(message: Message, allowed: boolean) {
     if (!message.guild!.me!.permissions.has('MANAGE_MESSAGES')) {
-      message.channel.send('I need more permissions to do that!')
-      this.sendPermissionsMessage(message)
+      message.channel.send(
+        this.createWarningEmbed(
+          'Permission Missing',
+          'To enable suppressing of Auto Embeds, Ember needs permission to ***manage messages***.'
+        )
+      )
     } else {
       this.guildSettingsManager.setSuppressAllowed(<string>message.guild?.id.toString(), allowed)
       if (message.guild!.me!.permissions.has('EMBED_LINKS')) {
@@ -192,32 +187,31 @@ export class Ember extends EventEmitter {
       .setColor('#DD2D04')
       .setDescription(
         `
-            **You can paste a reddit url and I will embed the content of the post into channel!**
+        ***General Commands***:
+        > To see this help command, send \`r/help\`.
+        > To check whether Ember's permissions are correct, send \`r/permissions\`.
+        > To check your Server Specific settings are, send \`r/settings\`.
             
-            Commands:
-            To see this help command, send \`r/help\`.
-            To check whether Ember's permissions are correct, send \`r/permissions\`.
-            To check your Server Specific settings are, send \`r/settings\`.
+        ***Post Summary***
+        > Use \`r/summary on\` or \`r/summary off\` to toggle whether Ember sends a summary of reddit posts.
+        > If you have summary enabled, use \`r/comments on\` or \`r/comments off\` to toggle whether comments are added to the post summary.
+        > *Note: Toggling summary will also toggle suppression but **not** vice versa.* 
+        
+        ***Auto Embed Suppression***
+        > Discord sometimes adds an Automatic Embedded Summary to reddit post links. You can choose to keep or suppress them.
+        > Use \`r/suppress on\` or \`r/suppress off\` to toggle whether Ember removes the auto embeds.
+        > *Note: This will require the \`Manage Messages\` permission.* 
+
+        ***You can paste a reddit url and I will embed the content of the post into channel!***
+                     
+        This bot has been made possible from CodeStix's existing Reddit bot.
+        ❤️Thanks for using this bot! If you like it, you should consider [voting for this bot](https://top.gg/bot/847140331450531872) and/or [voting for their bot](https://top.gg/bot/711524405163065385).
             
-            Server Specific Settings:
-              Post Summary
-                If you would to have a post summary included, send \`r/post summary\`.
-                If you would rather just have the media content embedded, send \`r/embed only\`.
-                If you would like the summary to include comments, send \`r/show comments\`.
-                If you would like the summary to hide the comments, send \`r/hide comments\`.
-              Discord Auto Embeds
-                If you would like to remove the Auto Discord Embed add to the original message, send \`r/clean message\`.
-                If you would like to leave the Auto Discord Embed, send \`r/keep message\`.
-              
-              
-            
-            This bot has been made possible from CodeStix's existing Reddit bot.
-            ❤️ Thanks for using this bot! If you like it, you should consider [voting for this bot](https://top.gg/bot/847140331450531872) and/or [voting for their bot](https://top.gg/bot/711524405163065385).
-            
-            [My code lives here!](https://github.com/hatesh/Reddit-Ember)
+        [My code lives here!](https://github.com/hatesh/Reddit-Ember)
         `
       )
-      .setFooter(`Version: ${packageConfig.version}`, 'https://avatars.githubusercontent.com/u/43727025')
+      .setFooter(`Version: ${packageConfig.version} `, 'https://avatars.githubusercontent.com/u/43727025')
+      .setTimestamp(new Date())
   }
 
   private rateLimit(channelId: string): boolean {
@@ -306,5 +300,13 @@ export class Ember extends EventEmitter {
 
   public createWarningEmbed(title: string, message: string): MessageEmbed {
     return new MessageEmbed().setTitle(`⚠️ ${title}`).setDescription(message).setColor('#FFC107')
+  }
+
+  private static stringIncludesTruthy(msg: string): boolean {
+    return (msg.includes('on') || msg.includes('1') || msg.includes('true')) && !this.stringIncludesFalsy(msg)
+  }
+
+  private static stringIncludesFalsy(msg: string): boolean {
+    return msg.includes('off') || msg.includes('0') || msg.includes('false')
   }
 }

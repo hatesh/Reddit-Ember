@@ -310,8 +310,8 @@ function createIndentedComment(comment: Comment, level: number) {
   let width = MAX_WIDTH - level * 5
   let out = ''
   let indent = ''
-  for (var i = 0; i < level; i++) indent += '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'
-  for (var i = 0; i < body.length / width; i++) {
+  for (let i = 0; i < level; i++) indent += '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'
+  for (let i = 0; i < body.length / width; i++) {
     if ((i + 1) * width < body.length) out += '> ' + indent + body.substring(i * width, (i + 1) * width) + '\n'
     else out += '> ' + indent + body.substring(i * width) + '\n'
   }

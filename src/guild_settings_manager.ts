@@ -8,9 +8,9 @@ export interface GuildSettings {
 }
 
 class DefaultGuildSettings implements GuildSettings {
-  post_message = true
+  post_message = false
   include_comments = false
-  suppress_web_embed = true
+  suppress_web_embed = false
 }
 
 export class GuildSettingsManager {
@@ -44,7 +44,6 @@ export class GuildSettingsManager {
   public setSuppressAllowed(guild_id: string, allowed: boolean = true) {
     let settings: GuildSettings | any = this.getServerSettings(guild_id)
     settings.suppress_web_embed = allowed
-    settings.post_message = !allowed // recommended
     this.db.set(guild_id, settings)
   }
 
@@ -56,8 +55,7 @@ export class GuildSettingsManager {
     return (
       this.postAllowedString(settings.post_message) +
       '\n' +
-      this.includeCommentsString(settings.post_message) +
-      '\n' +
+      (settings.post_message ? this.includeCommentsString(settings.post_message) + '\n' : '') +
       this.suppressAllowedString(settings.suppress_web_embed) +
       '\n'
     )
@@ -65,7 +63,7 @@ export class GuildSettingsManager {
 
   public generateMessageEmbedFromGuildId(guild: Guild): MessageEmbed {
     return new MessageEmbed()
-      .setTitle(`${guild.name} Ember Settings`)
+      .setTitle(`${guild.name}'s Ember Settings`)
       .setDescription(this.generateStringFromGuildId(guild.id))
       .setColor('#2196F3')
       .setTimestamp(new Date())
