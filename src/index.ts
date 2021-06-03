@@ -324,4 +324,3 @@ function truncateString(str: string, maxLength: number) {
   if (str.length > maxLength - TRUNCATOR.length) return str.substring(0, maxLength - TRUNCATOR.length) + TRUNCATOR
   else return str
 }
-;``

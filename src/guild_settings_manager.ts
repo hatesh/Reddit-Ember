@@ -31,7 +31,7 @@ export class GuildSettingsManager {
   public setPostMessageAllowed(guild_id: string, allowed: boolean = true) {
     let settings: GuildSettings | any = this.getServerSettings(guild_id)
     settings.post_message = allowed
-    settings.suppress_web_embed = !allowed // recommended
+    settings.suppress_web_embed = allowed // recommended
     this.db.set(guild_id, settings)
   }
 
